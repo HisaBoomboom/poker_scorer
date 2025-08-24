@@ -98,7 +98,7 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSaveDisabled = _totalScore != 0 || _players.isEmpty;
+    final bool isSaveDisabled = _players.isEmpty;
     final bool isEditing = widget.initialSession != null;
 
     return Scaffold(
@@ -118,10 +118,9 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       ),
       body: Column(
         children: [
-          if (!isEditing)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
                 children: [
                   Expanded(
                     child: TextField(
@@ -161,37 +160,46 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                           ),
                           Expanded(
                             flex: 4,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildTextField(
-                                  controller: _stackControllers[player.name]!,
-                                  label: 'Stack',
-                                  onChanged: (value) => _updateStack(player, value),
-                                ),
-                                const Text('-', style: TextStyle(fontSize: 20)),
-                                _buildTextField(
-                                  controller: _buyInControllers[player.name]!,
-                                  label: 'Buy-in',
-                                  onChanged: (value) => _updateBuyIn(player, value),
-                                ),
-                                const Text('=', style: TextStyle(fontSize: 20)),
-                                SizedBox(
-                                  width: 60,
-                                  child: Text(
-                                    player.score.toString(),
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _buildTextField(
+                                    controller: _stackControllers[player.name]!,
+                                    label: 'Stack',
+                                    onChanged: (value) =>
+                                        _updateStack(player, value),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  const Text('-', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(width: 8),
+                                  _buildTextField(
+                                    controller: _buyInControllers[player.name]!,
+                                    label: 'Buy-in',
+                                    onChanged: (value) =>
+                                        _updateBuyIn(player, value),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('=', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 60,
+                                    child: Text(
+                                      player.score.toString(),
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          if (!isEditing)
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => _removePlayer(index),
-                            ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () => _removePlayer(index),
+                          ),
                         ],
                       ),
                     ),
