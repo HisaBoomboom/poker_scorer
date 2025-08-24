@@ -26,5 +26,8 @@ void main() {
 
     // Verify the FloatingActionButton is present.
     expect(find.byIcon(Icons.add), findsOneWidget);
+
+    // Verify the new ranking button is present.
+    expect(find.byIcon(Icons.leaderboard), findsOneWidget);
   });
 }

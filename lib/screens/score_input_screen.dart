@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models.dart';
+import '../services/storage_service.dart';
 
 class ScoreInputScreen extends StatefulWidget {
   final GameSession? initialSession;
@@ -12,11 +13,13 @@ class ScoreInputScreen extends StatefulWidget {
 }
 
 class _ScoreInputScreenState extends State<ScoreInputScreen> {
+  final StorageService _storageService = StorageService();
   final List<Player> _players = [];
   final _playerNameController = TextEditingController();
   final Map<String, TextEditingController> _stackControllers = {};
   final Map<String, TextEditingController> _buyInControllers = {};
 
+  List<String> _allPlayerNames = [];
   int _totalStack = 0;
   int _totalBuyIn = 0;
   int _totalScore = 0;
@@ -24,6 +27,8 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
   @override
   void initState() {
     super.initState();
+    _loadInitialData();
+
     if (widget.initialSession != null) {
       final sessionCopy = widget.initialSession!.copyWith();
       for (var player in sessionCopy.players) {
@@ -37,15 +42,23 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
     }
   }
 
+  Future<void> _loadInitialData() async {
+    final names = await _storageService.getAllPlayerNames();
+    setState(() {
+      _allPlayerNames = names;
+    });
+  }
+
   void _addPlayer() {
-    final name = _playerNameController.text.trim();
-    if (name.isNotEmpty && !_players.any((p) => p.name == name)) {
+    final playerName = _playerNameController.text.trim();
+    if (playerName.isNotEmpty && !_players.any((p) => p.name == playerName)) {
       setState(() {
-        final newPlayer = Player(name: name);
+        final newPlayer = Player(name: playerName);
         _players.add(newPlayer);
-        _stackControllers[name] = TextEditingController();
-        _buyInControllers[name] = TextEditingController();
+        _stackControllers[playerName] = TextEditingController();
+        _buyInControllers[playerName] = TextEditingController();
         _playerNameController.clear();
+        // The Autocomplete widget handles its own focus.
       });
       _calculateTotals();
     }
@@ -121,25 +134,52 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _playerNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Player Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _addPlayer(),
-                    ),
+              children: [
+                Expanded(
+                  child: Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text == '') {
+                        return const Iterable<String>.empty();
+                      }
+                      return _allPlayerNames.where((String option) {
+                        return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                      });
+                    },
+                    onSelected: (String selection) {
+                      _playerNameController.text = selection;
+                      _addPlayer();
+                    },
+                    fieldViewBuilder: (BuildContext context,
+                        TextEditingController fieldController,
+                        FocusNode fieldFocusNode,
+                        VoidCallback onFieldSubmitted) {
+                      // Synchronize controllers
+                      if (_playerNameController != fieldController) {
+                        fieldController.text = _playerNameController.text;
+                      }
+                      return TextField(
+                        controller: fieldController,
+                        focusNode: fieldFocusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Player Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        onSubmitted: (_) {
+                          onFieldSubmitted();
+                          _addPlayer();
+                        },
+                      );
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _addPlayer,
-                    child: const Text('Add'),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _addPlayer,
+                  child: const Text('Add'),
+                ),
+              ],
             ),
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: _players.length,
