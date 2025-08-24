@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import 'models.dart';
+import 'screens/ranking_screen.dart';
 import 'screens/score_input_screen.dart';
 import 'services/storage_service.dart';
 
@@ -136,6 +137,22 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Poker Score Tracker'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Player Rankings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RankingScreen()),
+              ).then((_) {
+                // Refresh the home screen data if needed after returning
+                // from the ranking screen, in case data changes in the future.
+                _loadGameSessions();
+              });
+            },
+          ),
+        ],
       ),
       body: _gameSessions.isEmpty
           ? const Center(

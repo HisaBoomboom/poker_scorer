@@ -35,4 +35,44 @@ class StorageService {
       return [];
     }
   }
+
+  // Retrieve a list of all unique player names
+  Future<List<String>> getAllPlayerNames() async {
+    final sessions = await getGameSessions();
+    final Set<String> playerNames = {};
+    for (var session in sessions) {
+      for (var player in session.players) {
+        playerNames.add(player.name);
+      }
+    }
+    return playerNames.toList();
+  }
+
+  // Calculate and return the player rankings
+  Future<List<Player>> getRanking() async {
+    final sessions = await getGameSessions();
+    final Map<String, Player> playerTotals = {};
+
+    for (var session in sessions) {
+      for (var player in session.players) {
+        if (playerTotals.containsKey(player.name)) {
+          // Player exists, update their totals
+          final existingPlayer = playerTotals[player.name]!;
+          existingPlayer.stack += player.stack;
+          existingPlayer.buyIn += player.buyIn;
+        } else {
+          // New player, add them to the map with a copy of their data
+          playerTotals[player.name] = player.copyWith();
+        }
+      }
+    }
+
+    // Convert map values to a list
+    final rankedPlayers = playerTotals.values.toList();
+
+    // Sort players by score in descending order
+    rankedPlayers.sort((a, b) => b.score.compareTo(a.score));
+
+    return rankedPlayers;
+  }
 }
