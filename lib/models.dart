@@ -21,6 +21,14 @@ class Player {
       'score': score,
     };
   }
+
+  // Method to create a copy of a Player object
+  Player copyWith({String? name, int? score}) {
+    return Player(
+      name: name ?? this.name,
+      score: score ?? this.score,
+    );
+  }
 }
 
 class GameSession {
@@ -49,5 +57,15 @@ class GameSession {
       'date': date.toIso8601String(),
       'players': players.map((player) => player.toJson()).toList(),
     };
+  }
+
+  // Method to create a copy of a GameSession object
+  GameSession copyWith({String? id, DateTime? date, List<Player>? players}) {
+    return GameSession(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      // Create a new list with copies of the players
+      players: players ?? this.players.map((p) => p.copyWith()).toList(),
+    );
   }
 }

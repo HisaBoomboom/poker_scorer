@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import '../models.dart';
 
 class ScoreInputScreen extends StatefulWidget {
-  const ScoreInputScreen({super.key});
+  final GameSession? initialSession;
+
+  const ScoreInputScreen({super.key, this.initialSession});
 
   @override
   _ScoreInputScreenState createState() => _ScoreInputScreenState();
@@ -15,6 +17,21 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
   final Map<String, TextEditingController> _scoreControllers = {};
 
   int _totalScore = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSession != null) {
+      // Create a deep copy of the session to avoid modifying the original data.
+      final sessionCopy = widget.initialSession!.copyWith();
+      for (var player in sessionCopy.players) {
+        _players.add(player);
+        _scoreControllers[player.name] =
+            TextEditingController(text: player.score.toString());
+      }
+      _calculateTotal();
+    }
+  }
 
   void _addPlayer() {
     final name = _playerNameController.text.trim();
@@ -62,10 +79,11 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isSaveDisabled = _totalScore != 0 || _players.isEmpty;
+    final bool isEditing = widget.initialSession != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Game Session'),
+        title: Text(isEditing ? 'Edit Game Session' : 'New Game Session'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -82,28 +100,29 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       body: Column(
         children: [
           // Player input area
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _playerNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Player Name',
-                      border: OutlineInputBorder(),
+          if (!isEditing)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _playerNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Player Name',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => _addPlayer(),
                     ),
-                    onSubmitted: (_) => _addPlayer(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _addPlayer,
-                  child: const Text('Add'),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _addPlayer,
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
             ),
-          ),
           // Players list
           Expanded(
             child: ListView.builder(
@@ -131,10 +150,11 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                             onChanged: (value) => _updateScore(player, value),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () => _removePlayer(index),
-                        ),
+                        if (!isEditing)
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () => _removePlayer(index),
+                          ),
                       ],
                     ),
                   ),

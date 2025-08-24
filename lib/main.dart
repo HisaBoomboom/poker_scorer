@@ -74,6 +74,62 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _navigateToScoreInputScreenForEdit(
+      GameSession session, int index) async {
+    // Navigate to the score input screen for editing.
+    final List<Player>? updatedPlayers = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ScoreInputScreen(initialSession: session),
+      ),
+    );
+
+    // If the user saved changes, update the session.
+    if (updatedPlayers != null) {
+      final updatedSession = session.copyWith(players: updatedPlayers);
+
+      setState(() {
+        _gameSessions[index] = updatedSession;
+      });
+
+      await _storageService.saveGameSessions(_gameSessions);
+    }
+  }
+
+  Future<void> _deleteGameSession(int index) async {
+    setState(() {
+      _gameSessions.removeAt(index);
+    });
+    await _storageService.saveGameSessions(_gameSessions);
+  }
+
+  void _showDeleteConfirmation(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Session'),
+          content: const Text('Are you sure you want to delete this game session?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                _deleteGameSession(index);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +166,12 @@ class _HomePageState extends State<HomePage> {
                       child: Text(playersSummary),
                     ),
                     isThreeLine: true,
+                    onTap: () => _navigateToScoreInputScreenForEdit(session, index),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _showDeleteConfirmation(index),
+                      tooltip: 'Delete Session',
+                    ),
                   ),
                 );
               },
