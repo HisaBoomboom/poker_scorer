@@ -152,7 +152,9 @@ class _HomePageState extends State<HomePage> {
                 final session = _gameSessions[index];
                 // Format the date nicely
                 final formattedDate = DateFormat.yMMMd().add_jm().format(session.date);
-                final playersSummary = session.players.map((p) => '${p.name}: ${p.score}').join(', ');
+                final playersSummary = session.players
+                    .map((p) => '${p.name} / stack: ${p.stack}, buy-in: ${p.buyIn}, score: ${p.score}')
+                    .join('\n');
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6.0),

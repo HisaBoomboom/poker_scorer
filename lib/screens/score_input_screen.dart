@@ -14,22 +14,26 @@ class ScoreInputScreen extends StatefulWidget {
 class _ScoreInputScreenState extends State<ScoreInputScreen> {
   final List<Player> _players = [];
   final _playerNameController = TextEditingController();
-  final Map<String, TextEditingController> _scoreControllers = {};
+  final Map<String, TextEditingController> _stackControllers = {};
+  final Map<String, TextEditingController> _buyInControllers = {};
 
+  int _totalStack = 0;
+  int _totalBuyIn = 0;
   int _totalScore = 0;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialSession != null) {
-      // Create a deep copy of the session to avoid modifying the original data.
       final sessionCopy = widget.initialSession!.copyWith();
       for (var player in sessionCopy.players) {
         _players.add(player);
-        _scoreControllers[player.name] =
-            TextEditingController(text: player.score.toString());
+        _stackControllers[player.name] =
+            TextEditingController(text: player.stack.toString());
+        _buyInControllers[player.name] =
+            TextEditingController(text: player.buyIn.toString());
       }
-      _calculateTotal();
+      _calculateTotals();
     }
   }
 
@@ -39,40 +43,56 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       setState(() {
         final newPlayer = Player(name: name);
         _players.add(newPlayer);
-        _scoreControllers[name] = TextEditingController();
+        _stackControllers[name] = TextEditingController();
+        _buyInControllers[name] = TextEditingController();
         _playerNameController.clear();
       });
-      _calculateTotal();
+      _calculateTotals();
     }
   }
 
   void _removePlayer(int index) {
     setState(() {
       final player = _players.removeAt(index);
-      _scoreControllers.remove(player.name)?.dispose();
+      _stackControllers.remove(player.name)?.dispose();
+      _buyInControllers.remove(player.name)?.dispose();
     });
-    _calculateTotal();
+    _calculateTotals();
   }
 
-  void _calculateTotal() {
-    int sum = 0;
+  void _calculateTotals() {
+    int stackSum = 0;
+    int buyInSum = 0;
+    int scoreSum = 0;
     for (var player in _players) {
-      sum += player.score;
+      stackSum += player.stack;
+      buyInSum += player.buyIn;
+      scoreSum += player.score;
     }
     setState(() {
-      _totalScore = sum;
+      _totalStack = stackSum;
+      _totalBuyIn = buyInSum;
+      _totalScore = scoreSum;
     });
   }
 
-  void _updateScore(Player player, String value) {
-    player.score = int.tryParse(value) ?? 0;
-    _calculateTotal();
+  void _updateStack(Player player, String value) {
+    player.stack = int.tryParse(value) ?? 0;
+    _calculateTotals();
+    setState(() {}); // To rebuild and update the score display
+  }
+
+  void _updateBuyIn(Player player, String value) {
+    player.buyIn = int.tryParse(value) ?? 0;
+    _calculateTotals();
+    setState(() {}); // To rebuild and update the score display
   }
 
   @override
   void dispose() {
     _playerNameController.dispose();
-    _scoreControllers.values.forEach((controller) => controller.dispose());
+    _stackControllers.values.forEach((controller) => controller.dispose());
+    _buyInControllers.values.forEach((controller) => controller.dispose());
     super.dispose();
   }
 
@@ -91,7 +111,6 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
             onPressed: isSaveDisabled
                 ? null
                 : () {
-                    // Pop and return the list of players
                     Navigator.of(context).pop(_players);
                   },
           ),
@@ -99,7 +118,6 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       ),
       body: Column(
         children: [
-          // Player input area
           if (!isEditing)
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -123,66 +141,132 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                 ],
               ),
             ),
-          // Players list
           Expanded(
             child: ListView.builder(
               itemCount: _players.length,
               itemBuilder: (context, index) {
                 final player = _players[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text((index + 1).toString())),
-                  title: Text(player.name, style: const TextStyle(fontSize: 18)),
-                  trailing: SizedBox(
-                    width: 150,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _scoreControllers[player.name],
-                            decoration: const InputDecoration(
-                              labelText: 'Score',
-                              border: OutlineInputBorder(),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(child: Text((index + 1).toString())),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: Text(player.name, style: const TextStyle(fontSize: 18)),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildTextField(
+                                  controller: _stackControllers[player.name]!,
+                                  label: 'Stack',
+                                  onChanged: (value) => _updateStack(player, value),
+                                ),
+                                const Text('-', style: TextStyle(fontSize: 20)),
+                                _buildTextField(
+                                  controller: _buyInControllers[player.name]!,
+                                  label: 'Buy-in',
+                                  onChanged: (value) => _updateBuyIn(player, value),
+                                ),
+                                const Text('=', style: TextStyle(fontSize: 20)),
+                                SizedBox(
+                                  width: 60,
+                                  child: Text(
+                                    player.score.toString(),
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
                             ),
-                            keyboardType: const TextInputType.numberWithOptions(signed: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*')),
-                            ],
-                            onChanged: (value) => _updateScore(player, value),
                           ),
-                        ),
-                        if (!isEditing)
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => _removePlayer(index),
-                          ),
-                      ],
+                          if (!isEditing)
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              onPressed: () => _removePlayer(index),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
-          // Total score footer
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: _totalScore == 0 ? Colors.green.shade100 : Colors.red.shade100,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Center(
-              child: Text(
-                'Total Score: $_totalScore',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _totalScore == 0 ? Colors.green.shade800 : Colors.red.shade800,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    'Totals',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildTotalText('Stack', _totalStack),
+                      _buildTotalText('Buy-in', _totalBuyIn),
+                      _buildTotalText('Score', _totalScore, isScore: true),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required ValueChanged<String> onChanged,
+  }) {
+    return SizedBox(
+      width: 80,
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        ),
+        keyboardType: const TextInputType.numberWithOptions(signed: true),
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*'))],
+        onChanged: onChanged,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildTotalText(String label, int value, {bool isScore = false}) {
+    final Color color;
+    if (isScore) {
+      color = value == 0 ? Colors.green.shade800 : Colors.red.shade800;
+    } else {
+      color = Colors.black87;
+    }
+
+    return Text(
+      '$label: $value',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: color,
       ),
     );
   }

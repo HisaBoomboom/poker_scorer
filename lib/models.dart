@@ -2,15 +2,20 @@ import 'package:flutter/foundation.dart';
 
 class Player {
   String name;
-  int score;
+  int stack;
+  int buyIn;
 
-  Player({required this.name, this.score = 0});
+  Player({required this.name, this.stack = 0, this.buyIn = 0});
+
+  // Calculated property for the score
+  int get score => stack - buyIn;
 
   // Factory constructor to create a Player from a JSON object
   factory Player.fromJson(Map<String, dynamic> json) {
     return Player(
       name: json['name'],
-      score: json['score'],
+      stack: json['stack'] ?? 0,
+      buyIn: json['buyIn'] ?? 0,
     );
   }
 
@@ -18,15 +23,17 @@ class Player {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'score': score,
+      'stack': stack,
+      'buyIn': buyIn,
     };
   }
 
   // Method to create a copy of a Player object
-  Player copyWith({String? name, int? score}) {
+  Player copyWith({String? name, int? stack, int? buyIn}) {
     return Player(
       name: name ?? this.name,
-      score: score ?? this.score,
+      stack: stack ?? this.stack,
+      buyIn: buyIn ?? this.buyIn,
     );
   }
 }
