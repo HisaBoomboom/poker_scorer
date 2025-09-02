@@ -55,6 +55,12 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
       setState(() {
         final newPlayer = Player(name: playerName);
         _players.add(newPlayer);
+
+        // Add to all players list if not already there for autocomplete
+        if (!_allPlayerNames.contains(playerName)) {
+          _allPlayerNames.add(playerName);
+        }
+
         _stackControllers[playerName] = TextEditingController();
         _buyInControllers[playerName] = TextEditingController();
         _playerNameController.clear();
