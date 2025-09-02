@@ -161,10 +161,13 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                         TextEditingController fieldController,
                         FocusNode fieldFocusNode,
                         VoidCallback onFieldSubmitted) {
-                      // Synchronize controllers
-                      if (_playerNameController != fieldController) {
-                        fieldController.text = _playerNameController.text;
+                      // When a player is added, _playerNameController is cleared.
+                      // We reflect that change in the fieldController here during the build.
+                      if (_playerNameController.text.isEmpty &&
+                          fieldController.text.isNotEmpty) {
+                        fieldController.clear();
                       }
+
                       return TextField(
                         controller: fieldController,
                         focusNode: fieldFocusNode,
@@ -172,6 +175,10 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                           labelText: 'Player Name',
                           border: OutlineInputBorder(),
                         ),
+                        onChanged: (text) {
+                          // Sync from the field's controller to our state's controller.
+                          _playerNameController.text = text;
+                        },
                         onSubmitted: (_) {
                           onFieldSubmitted();
                           _addPlayer();
