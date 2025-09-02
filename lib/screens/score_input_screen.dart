@@ -61,8 +61,10 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
           _allPlayerNames.add(playerName);
         }
 
-        _stackControllers[playerName] = TextEditingController();
-        _buyInControllers[playerName] = TextEditingController();
+        _stackControllers[playerName] =
+            TextEditingController(text: newPlayer.stack.toString());
+        _buyInControllers[playerName] =
+            TextEditingController(text: newPlayer.buyIn.toString());
         _playerNameController.clear();
         // The Autocomplete widget handles its own focus.
       });
