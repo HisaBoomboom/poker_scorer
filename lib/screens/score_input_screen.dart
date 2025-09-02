@@ -186,7 +186,7 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
               itemBuilder: (context, index) {
                 final player = _players[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -210,16 +210,16 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
                                     onChanged: (value) =>
                                         _updateStack(player, value),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 4),
                                   const Text('-', style: TextStyle(fontSize: 20)),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 4),
                                   _buildTextField(
                                     controller: _buyInControllers[player.name]!,
                                     label: 'Buy-in',
                                     onChanged: (value) =>
                                         _updateBuyIn(player, value),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 4),
                                   const Text('=', style: TextStyle(fontSize: 20)),
                                   const SizedBox(width: 8),
                                   SizedBox(
@@ -291,7 +291,7 @@ class _ScoreInputScreenState extends State<ScoreInputScreen> {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         ),
         keyboardType: const TextInputType.numberWithOptions(signed: true),
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*'))],
