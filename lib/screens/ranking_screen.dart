@@ -28,6 +28,30 @@ class _RankingScreenState extends State<RankingScreen> {
     });
   }
 
+  Widget _buildInfoColumn(String title, String value, double fontSize, {Color? color}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: fontSize - 2, // Smaller font for the title
+            color: Colors.grey.shade600,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: color ?? Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,14 +89,16 @@ class _RankingScreenState extends State<RankingScreen> {
                           player.name,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text('Total Buy-in: ${player.buyIn}'),
-                        trailing: Text(
-                          'Score: ${player.score}',
-                          style: TextStyle(
-                            color: scoreColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildInfoColumn('Stack', player.stack.toString(), 12),
+                            const SizedBox(width: 12),
+                            _buildInfoColumn('Buy-in', player.buyIn.toString(), 12),
+                            const SizedBox(width: 12),
+                            _buildInfoColumn('Score', player.score.toString(), 12,
+                                color: scoreColor),
+                          ],
                         ),
                       ),
                     );
